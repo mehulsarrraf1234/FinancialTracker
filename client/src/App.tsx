@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CurrencyProvider } from "@/context/currency-context";
+import { SubscriptionProvider } from "@/hooks/use-subscription";
 import { useState } from "react";
 import Dashboard from "@/pages/dashboard";
 import Transactions from "@/pages/transactions";
@@ -12,6 +13,7 @@ import Categories from "@/pages/categories";
 import Loans from "@/pages/loans";
 import Business from "@/pages/business";
 import Reports from "@/pages/reports";
+import Subscription from "@/pages/subscription";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";
 import MobileMenu from "@/components/modals/mobile-menu";
@@ -25,6 +27,7 @@ function Router() {
       <Route path="/loans" component={Loans} />
       <Route path="/business" component={Business} />
       <Route path="/reports" component={Reports} />
+      <Route path="/subscription" component={Subscription} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -36,21 +39,23 @@ function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="finance-tracker-theme">
       <CurrencyProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <div className="min-h-screen flex bg-background dark:bg-background">
-              <Sidebar />
-              <MobileMenu 
-                isOpen={isMobileMenuOpen} 
-                onClose={() => setIsMobileMenuOpen(false)} 
-              />
-              <main className="flex-1 flex flex-col">
-                <Router />
-              </main>
-            </div>
-            <Toaster />
-          </TooltipProvider>
-        </QueryClientProvider>
+        <SubscriptionProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <div className="min-h-screen flex bg-background dark:bg-background">
+                <Sidebar />
+                <MobileMenu 
+                  isOpen={isMobileMenuOpen} 
+                  onClose={() => setIsMobileMenuOpen(false)} 
+                />
+                <main className="flex-1 flex flex-col">
+                  <Router />
+                </main>
+              </div>
+              <Toaster />
+            </TooltipProvider>
+          </QueryClientProvider>
+        </SubscriptionProvider>
       </CurrencyProvider>
     </ThemeProvider>
   );

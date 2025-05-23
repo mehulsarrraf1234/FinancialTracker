@@ -36,6 +36,12 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  email: text("email"),
+  subscriptionStatus: text("subscription_status").notNull().default("free"), // "free", "premium"
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertTransactionSchema = createInsertSchema(transactions).omit({

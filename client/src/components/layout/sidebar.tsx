@@ -7,7 +7,8 @@ import {
   Briefcase, 
   BarChart3, 
   Settings,
-  TrendingUp
+  TrendingUp,
+  Crown
 } from "lucide-react";
 
 const navigation = [
@@ -17,6 +18,7 @@ const navigation = [
   { name: "Loans", href: "/loans", icon: Handshake },
   { name: "Business", href: "/business", icon: Briefcase },
   { name: "Reports", href: "/reports", icon: BarChart3 },
+  { name: "Subscription", href: "/subscription", icon: Crown },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
