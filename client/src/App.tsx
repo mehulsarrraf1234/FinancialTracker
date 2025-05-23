@@ -14,6 +14,7 @@ import Loans from "@/pages/loans";
 import Business from "@/pages/business";
 import Reports from "@/pages/reports";
 import Subscription from "@/pages/subscription";
+import Checkout from "@/pages/checkout";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";
 import MobileMenu from "@/components/modals/mobile-menu";
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/business" component={Business} />
       <Route path="/reports" component={Reports} />
       <Route path="/subscription" component={Subscription} />
+      <Route path="/checkout" component={Checkout} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -9,14 +9,22 @@ interface SubscriptionFeatures {
   multiCurrency: boolean;
   dataExport: boolean;
   cloudSync: boolean;
+  aiInsights: boolean;
+  receiptScanning: boolean;
+  smartBudgets: boolean;
+  goalTracking: boolean;
+  teamCollaboration: boolean;
+  prioritySupport: boolean;
 }
 
 interface SubscriptionContextType {
-  plan: "free" | "premium";
+  plan: "free" | "premium" | "trial";
   features: SubscriptionFeatures;
   upgradeRequired: (feature: keyof SubscriptionFeatures) => boolean;
   transactionCount: number;
   setTransactionCount: (count: number) => void;
+  trialDaysLeft: number;
+  isTrialExpired: boolean;
 }
 
 const freeFeatures: SubscriptionFeatures = {
@@ -28,6 +36,12 @@ const freeFeatures: SubscriptionFeatures = {
   multiCurrency: false,
   dataExport: false,
   cloudSync: false,
+  aiInsights: false,
+  receiptScanning: false,
+  smartBudgets: false,
+  goalTracking: false,
+  teamCollaboration: false,
+  prioritySupport: false,
 };
 
 const premiumFeatures: SubscriptionFeatures = {
@@ -39,29 +53,49 @@ const premiumFeatures: SubscriptionFeatures = {
   multiCurrency: true,
   dataExport: true,
   cloudSync: true,
+  aiInsights: true,
+  receiptScanning: true,
+  smartBudgets: true,
+  goalTracking: true,
+  teamCollaboration: true,
+  prioritySupport: true,
 };
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  const [plan, setPlan] = useState<"free" | "premium">("free");
+  const [plan, setPlan] = useState<"free" | "premium" | "trial">("free");
   const [transactionCount, setTransactionCount] = useState(0);
+  const [trialStartDate, setTrialStartDate] = useState<Date | null>(null);
+  
+  // Calculate trial days left
+  const trialDaysLeft = trialStartDate 
+    ? Math.max(0, 15 - Math.floor((Date.now() - trialStartDate.getTime()) / (1000 * 60 * 60 * 24)))
+    : 15;
+  
+  const isTrialExpired = plan === "trial" && trialDaysLeft <= 0;
   
   // In a real app, this would come from your backend/user data
   useEffect(() => {
-    const savedPlan = localStorage.getItem("subscription-plan") as "free" | "premium" | null;
+    const savedPlan = localStorage.getItem("subscription-plan") as "free" | "premium" | "trial" | null;
+    const savedTrialStart = localStorage.getItem("trial-start-date");
+    
     if (savedPlan) {
       setPlan(savedPlan);
     }
+    
+    if (savedTrialStart) {
+      setTrialStartDate(new Date(savedTrialStart));
+    }
   }, []);
 
-  const features = plan === "premium" ? premiumFeatures : freeFeatures;
+  const features = (plan === "premium" || (plan === "trial" && !isTrialExpired)) ? premiumFeatures : freeFeatures;
 
   const upgradeRequired = (feature: keyof SubscriptionFeatures) => {
     if (feature === "maxTransactions") {
-      return transactionCount >= freeFeatures.maxTransactions && plan === "free";
+      return transactionCount >= freeFeatures.maxTransactions && (plan === "free" || isTrialExpired);
     }
-    return !features[feature] && plan === "free";
+    return !features[feature] && (plan === "free" || isTrialExpired);
   };
 
   return (
@@ -71,6 +105,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       upgradeRequired,
       transactionCount,
       setTransactionCount,
+      trialDaysLeft,
+      isTrialExpired,
     }}>
       {children}
     </SubscriptionContext.Provider>
