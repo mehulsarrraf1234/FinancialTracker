@@ -216,6 +216,7 @@ export class MemStorage implements IStorage {
     const loan: Loan = { 
       ...insertLoan, 
       id,
+      status: insertLoan.status || "active",
       createdAt: new Date()
     };
     this.loans.set(id, loan);
