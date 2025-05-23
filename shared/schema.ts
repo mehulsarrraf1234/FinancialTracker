@@ -81,6 +81,47 @@ export const bankTransactions = pgTable("bank_transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const budgets = pgTable("budgets", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  name: text("name").notNull(),
+  categoryId: integer("category_id").references(() => categories.id),
+  budgetType: text("budget_type").notNull(), // "category", "total_spending", "income", "savings"
+  targetAmount: decimal("target_amount", { precision: 12, scale: 2 }).notNull(),
+  period: text("period").notNull(), // "weekly", "monthly", "quarterly", "yearly"
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  alertThreshold: decimal("alert_threshold", { precision: 5, scale: 2 }).default("0.80"), // 80% by default
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const goals = pgTable("goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  goalType: text("goal_type").notNull(), // "savings", "debt_payoff", "investment", "emergency_fund", "purchase"
+  targetAmount: decimal("target_amount", { precision: 12, scale: 2 }).notNull(),
+  currentAmount: decimal("current_amount", { precision: 12, scale: 2 }).default("0"),
+  targetDate: timestamp("target_date"),
+  priority: text("priority").notNull().default("medium"), // "low", "medium", "high"
+  status: text("status").notNull().default("active"), // "active", "completed", "paused"
+  autoContribute: boolean("auto_contribute").default(false),
+  monthlyContribution: decimal("monthly_contribution", { precision: 12, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const budgetAlerts = pgTable("budget_alerts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  budgetId: integer("budget_id").references(() => budgets.id).notNull(),
+  alertType: text("alert_type").notNull(), // "threshold_reached", "budget_exceeded", "period_ending"
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
   createdAt: true,
@@ -110,6 +151,21 @@ export const insertBankTransactionSchema = createInsertSchema(bankTransactions).
   createdAt: true,
 });
 
+export const insertBudgetSchema = createInsertSchema(budgets).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertGoalSchema = createInsertSchema(goals).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertBudgetAlertSchema = createInsertSchema(budgetAlerts).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 
@@ -127,3 +183,12 @@ export type BankAccount = typeof bankAccounts.$inferSelect;
 
 export type InsertBankTransaction = z.infer<typeof insertBankTransactionSchema>;
 export type BankTransaction = typeof bankTransactions.$inferSelect;
+
+export type InsertBudget = z.infer<typeof insertBudgetSchema>;
+export type Budget = typeof budgets.$inferSelect;
+
+export type InsertGoal = z.infer<typeof insertGoalSchema>;
+export type Goal = typeof goals.$inferSelect;
+
+export type InsertBudgetAlert = z.infer<typeof insertBudgetAlertSchema>;
+export type BudgetAlert = typeof budgetAlerts.$inferSelect;

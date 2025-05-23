@@ -29,6 +29,7 @@ function Router() {
       <Route path="/loans" component={Loans} />
       <Route path="/business" component={Business} />
       <Route path="/reports" component={Reports} />
+      <Route path="/bank-accounts" component={BankAccounts} />
       <Route path="/subscription" component={Subscription} />
       <Route path="/checkout" component={Checkout} />
       <Route component={NotFound} />

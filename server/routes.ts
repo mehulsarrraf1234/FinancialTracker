@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
+import { PlaidApi, Configuration, PlaidEnvironments } from "plaid";
 import { storage } from "./storage";
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -9,6 +10,20 @@ if (!process.env.STRIPE_SECRET_KEY) {
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2024-12-18.acacia",
 });
+
+// Initialize Plaid client for global banking integration
+const plaidConfiguration = new Configuration({
+  basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
+  baseOptions: {
+    headers: {
+      'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
+      'PLAID-SECRET': process.env.PLAID_SECRET,
+    },
+  },
+});
+
+const plaidClient = new PlaidApi(plaidConfiguration);
+
 import { insertTransactionSchema, insertCategorySchema, insertLoanSchema } from "@shared/schema";
 import { z } from "zod";
 
