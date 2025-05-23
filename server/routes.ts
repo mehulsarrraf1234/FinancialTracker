@@ -290,6 +290,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Stripe subscription payment intent for monthly/annual plans
+  app.post("/api/create-subscription-intent", async (req, res) => {
+    try {
+      const { planType, amount } = req.body;
+      
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount), // Amount in cents
+        currency: "usd",
+        metadata: {
+          planType,
+        },
+      });
+      
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      res.status(500).json({ 
+        message: "Error creating subscription payment intent: " + error.message 
+      });
+    }
+  });
+
+  // Webhook to handle successful payments (for production)
+  app.post("/api/stripe-webhook", async (req, res) => {
+    try {
+      // In production, you'd verify the webhook signature here
+      const event = req.body;
+      
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object;
+        const planType = paymentIntent.metadata.planType;
+        
+        // Here you would update the user's subscription in your database
+        console.log(`Payment succeeded for plan: ${planType}`);
+      }
+      
+      res.json({ received: true });
+    } catch (error: any) {
+      res.status(400).json({ message: "Webhook error: " + error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
