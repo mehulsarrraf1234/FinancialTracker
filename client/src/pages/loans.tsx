@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
+import { useSubscription } from "@/hooks/use-subscription";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 import Topbar from "@/components/layout/topbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +36,36 @@ export default function Loans() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
   const { toast } = useToast();
+  const { upgradeRequired } = useSubscription();
+
+  // Show upgrade prompt for free users trying to access loan management
+  if (upgradeRequired('loanManagement')) {
+    return (
+      <>
+        <Topbar 
+          title="Loans"
+          subtitle="Track and manage your loans and debts"
+          onAddTransaction={() => {}}
+          onToggleMobileMenu={() => {}}
+        />
+        
+        <div className="flex-1 p-4 lg:p-6 overflow-y-auto">
+          <UpgradePrompt
+            title="Loan Management"
+            description="Take control of your debt with comprehensive loan tracking, payment schedules, and interest calculations."
+            features={[
+              "Track multiple loans and debts",
+              "Monitor payment schedules",
+              "Calculate interest and payoff times",
+              "Payment history tracking",
+              "Loan progress visualization"
+            ]}
+            className="max-w-2xl mx-auto mt-8"
+          />
+        </div>
+      </>
+    );
+  }
 
   const { data: loans = [], isLoading } = useQuery<Loan[]>({
     queryKey: ["/api/loans"],

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSubscription } from "@/hooks/use-subscription";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 import Topbar from "@/components/layout/topbar";
 import AddTransactionModal from "@/components/modals/add-transaction-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,10 +17,40 @@ export default function Business() {
   const [isAddTransactionModalOpen, setIsAddTransactionModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const { upgradeRequired } = useSubscription();
 
   const { data: allTransactions = [], isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
   });
+
+  // Show upgrade prompt for free users trying to access business tracking
+  if (upgradeRequired('businessTracking')) {
+    return (
+      <>
+        <Topbar 
+          title="Business"
+          subtitle="Track your business expenses and analyze spending"
+          onAddTransaction={() => setIsAddTransactionModalOpen(true)}
+          onToggleMobileMenu={() => {}}
+        />
+        
+        <div className="flex-1 p-4 lg:p-6 overflow-y-auto">
+          <UpgradePrompt
+            title="Business Expense Tracking"
+            description="Track and categorize your business expenses separately from personal spending for better financial management and tax preparation."
+            features={[
+              "Unlimited business transactions",
+              "Custom business categories",
+              "Separate business reports",
+              "Tax-ready expense summaries",
+              "Business vs personal insights"
+            ]}
+            className="max-w-2xl mx-auto mt-8"
+          />
+        </div>
+      </>
+    );
+  }
 
   const businessTransactions = allTransactions.filter(t => t.type === "business");
 
