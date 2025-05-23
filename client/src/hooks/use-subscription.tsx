@@ -18,13 +18,14 @@ interface SubscriptionFeatures {
 }
 
 interface SubscriptionContextType {
-  plan: "free" | "premium" | "trial";
+  plan: "free" | "monthly_trial" | "annual_trial" | "monthly" | "annual";
   features: SubscriptionFeatures;
   upgradeRequired: (feature: keyof SubscriptionFeatures) => boolean;
   transactionCount: number;
   setTransactionCount: (count: number) => void;
   trialDaysLeft: number;
   isTrialExpired: boolean;
+  trialType: "monthly" | "annual" | null;
 }
 
 const freeFeatures: SubscriptionFeatures = {
@@ -64,21 +65,29 @@ const premiumFeatures: SubscriptionFeatures = {
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  const [plan, setPlan] = useState<"free" | "premium" | "trial">("free");
+  const [plan, setPlan] = useState<"free" | "monthly_trial" | "annual_trial" | "monthly" | "annual">("free");
   const [transactionCount, setTransactionCount] = useState(0);
   const [trialStartDate, setTrialStartDate] = useState<Date | null>(null);
+  const [trialType, setTrialType] = useState<"monthly" | "annual" | null>(null);
   
-  // Calculate trial days left
+  // Calculate trial days left based on trial type
+  const getTrialDuration = () => {
+    if (trialType === "monthly") return 15; // 15 days for monthly trial
+    if (trialType === "annual") return 30; // 30 days (1 month) for annual trial
+    return 0;
+  };
+  
   const trialDaysLeft = trialStartDate 
-    ? Math.max(0, 15 - Math.floor((Date.now() - trialStartDate.getTime()) / (1000 * 60 * 60 * 24)))
-    : 15;
+    ? Math.max(0, getTrialDuration() - Math.floor((Date.now() - trialStartDate.getTime()) / (1000 * 60 * 60 * 24)))
+    : getTrialDuration();
   
-  const isTrialExpired = plan === "trial" && trialDaysLeft <= 0;
+  const isTrialExpired = (plan === "monthly_trial" || plan === "annual_trial") && trialDaysLeft <= 0;
   
   // In a real app, this would come from your backend/user data
   useEffect(() => {
-    const savedPlan = localStorage.getItem("subscription-plan") as "free" | "premium" | "trial" | null;
+    const savedPlan = localStorage.getItem("subscription-plan") as "free" | "monthly_trial" | "annual_trial" | "monthly" | "annual" | null;
     const savedTrialStart = localStorage.getItem("trial-start-date");
+    const savedTrialType = localStorage.getItem("trial-type") as "monthly" | "annual" | null;
     
     if (savedPlan) {
       setPlan(savedPlan);
@@ -87,9 +96,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     if (savedTrialStart) {
       setTrialStartDate(new Date(savedTrialStart));
     }
+    
+    if (savedTrialType) {
+      setTrialType(savedTrialType);
+    }
   }, []);
 
-  const features = (plan === "premium" || (plan === "trial" && !isTrialExpired)) ? premiumFeatures : freeFeatures;
+  const features = (plan === "monthly" || plan === "annual" || ((plan === "monthly_trial" || plan === "annual_trial") && !isTrialExpired)) 
+    ? premiumFeatures 
+    : freeFeatures;
 
   const upgradeRequired = (feature: keyof SubscriptionFeatures) => {
     if (feature === "maxTransactions") {
@@ -107,6 +122,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setTransactionCount,
       trialDaysLeft,
       isTrialExpired,
+      trialType,
     }}>
       {children}
     </SubscriptionContext.Provider>
