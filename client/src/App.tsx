@@ -15,6 +15,7 @@ import Business from "@/pages/business";
 import Reports from "@/pages/reports";
 import Subscription from "@/pages/subscription";
 import Checkout from "@/pages/checkout";
+import BankAccounts from "@/pages/bank-accounts";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";
 import MobileMenu from "@/components/modals/mobile-menu";
